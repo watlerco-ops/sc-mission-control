@@ -1,0 +1,36 @@
+{
+  "_comment": "HAND ANNOTATIONS FOR THE MISSION CONTROL BOARD. Edit this file through the GitHub web UI. The builder reads it on every run and merges it into the render, so anything written here survives every rebuild. index.html itself is generated: a note typed straight into it is gone at the next refresh.",
+  "_how": "One entry per job, keyed by the job NUMBER as a string. Every field is optional. 'note' adds a sentence to the What Closes It list on that job's expand card. 'badge' adds one extra badge chip. 'name' pins the display address, overriding whatever JobTread carries. Delete a field to drop it; delete the whole entry to drop them all. Keys matching no active job are ignored, so an entry can be left in place while a job is closed.",
+  "_rules": "No em dash and no en dash: the build refuses to publish if either reaches the page, and the refusal names this file. Same for the banned court terms. Valid JSON only. A syntax error here stops the refresh rather than silently dropping every annotation, and posts a JobTread comment saying so.",
+  "_example": {
+    "note": "One sentence about this job.",
+    "badge": "On hold",
+    "name": "123 Example St"
+  },
+  "98": {
+    "name": "15501 Fox Run Dr"
+  },
+  "65": {
+    "name": "9108 Ranch Rd 965",
+    "note": "Reopened. $17,515 of the remaining balance has no invoice against it yet."
+  },
+  "49": {
+    "name": "401 Battle Bend Blvd"
+  },
+  "15": {
+    "name": "2611 Cuernavaca Dr N"
+  },
+  "99": {
+    "name": "15314 Artesian Oaks St"
+  },
+  "3": {
+    "name": "3306 Hyclimb Cir",
+    "note": "An approved rough estimate for $14,365 sits outside the budget on this job. Confirm whether that scope is real; if it is, fold it into the budget and bill it."
+  },
+  "61": {
+    "note": "Two closeout change orders pending with the client: a $6,471 reconciliation credit and $2,063 in additional charges, net $4,408 back to them. Get both signed and this job closes."
+  },
+  "101": {
+    "note": "Small job is paid in full. Job stays open only because the pool proposal is out with Steven and unsigned."
+  }
+}
