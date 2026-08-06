@@ -1,0 +1,74 @@
+name: Deploy Mission Control to Pages
+
+# WHY THIS FILE EXISTS. Pages was on the LEGACY branch-deploy source, where the
+# deploy is GitHub's own auto-generated "pages-build-deployment" workflow and we
+# own none of its inputs. On 2026-08-06 GitHub's Pages backend started taking
+# longer than the 10 minute default timeout inside actions/deploy-pages, so the
+# action gave up and reported a red run on a deployment that was still running
+# server side and then landed roughly one minute later. The board content was
+# never wrong; the run was. Raising that timeout is the fix, and raising it
+# requires owning the workflow, which requires this file.
+#
+# No em dashes or en dashes anywhere in this file (watcher voice rule).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages permits one deployment at a time. QUEUE rather than cancel: cancelling a
+# deployment that is already syncing is how a site ends up serving a half written
+# tree, and the board refreshes hourly so a queued run is at most one refresh
+# behind. Measured 2026-08-06: the hourly pushes do NOT overlap even at the
+# degraded 10 minute deploy time, so this group is a guard, not a fix.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # KILL SWITCH. Set the repository variable PAGES_DEPLOY_DISABLED to the string
+  # "true" (Settings > Secrets and variables > Actions > Variables, or
+  # `gh api -X PATCH repos/watlerco-ops/sc-mission-control/actions/variables/PAGES_DEPLOY_DISABLED -f value=true`)
+  # and every future push stops deploying without editing this file. The board
+  # keeps building and pushing on Lightsail; only publication stops, and the last
+  # good board stays on the URL. Set it back to "false" to resume.
+  deploy:
+    if: vars.PAGES_DEPLOY_DISABLED != 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          # The whole repo root. It is five files and a .nojekyll, so there is
+          # nothing to exclude and no Jekyll pass to run.
+          path: '.'
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
+        with:
+          # 30 minutes, against a 10 minute default. This is the entire point of
+          # the file. Sized from the observed failure: deploys were completing
+          # between 10 and 12 minutes, so 30 leaves real headroom without letting
+          # a genuinely wedged deployment hold a runner all day.
+          timeout: 1800000
+
+  # TELEMETRY for the kill switch. Without this, a disabled deploy is a silent
+  # no-op and the Actions tab just shows nothing happened, which reads the same
+  # as a broken trigger. This makes the refusal visible and names the reason.
+  deploy-disabled:
+    if: vars.PAGES_DEPLOY_DISABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::warning title=Mission Control Pages deploy skipped::PAGES_DEPLOY_DISABLED is true, so ${{ github.sha }} was NOT published. The last good board is still on the URL. Set the variable to false to resume."
